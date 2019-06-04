@@ -1,0 +1,171 @@
+<html>
+<head>
+    <title>Customer App 3</title>
+    <link href="https://stackpath.bootstrapcdn.com/bootstrap/3.3.2/css/bootstrap.min.css" rel="stylesheet">
+    <script src='https://api.tiles.mapbox.com/mapbox-gl-js/v0.44.2/mapbox-gl.js'></script>
+    <link href='https://api.tiles.mapbox.com/mapbox-gl-js/v0.44.2/mapbox-gl.css' rel='stylesheet'/>
+</head>
+<body>
+<style>
+    #delay-map {
+        height: 600px;
+        text-align: center;
+    }
+
+    .marker {
+        background-image: url('../../includes/img/car.png');
+        background-size: contain;
+        background-position-x: 50%;
+        background-repeat: no-repeat;
+        width: 24px;
+        height:32px;
+        z-index: 99;
+        rotation: 180deg !important;
+        text-align: center;
+        font-size: 1.4em;
+        line-height: 1.2em;
+        cursor: pointer;
+    }
+
+    .mapboxgl-canvas {
+        position: relative !important;
+    }
+</style>
+<div style="float: left;width: 100%;">
+    <div style="margin-top: 8px;margin-left: 8px;">
+        <h3>Customer App 3</h3>
+    </div>
+    <div style="width: 100%;float:left;margin-top: 20px;">
+        <div id="delay-map"></div>
+    </div>
+    <br><br>
+    <ul>
+        <li>Open console to view sockets' data</li>
+    </ul>
+</div>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/2.0.4/socket.io.js"></script>
+<script src="https://unpkg.com/cheap-ruler@2.5.1/cheap-ruler.js"></script>
+<script src="../config.js"></script>
+<script>
+    var driverId = 'driver3'
+    var marker;
+    var focus = true;
+    var oldLatLng;
+    var lastQueryTime = {};
+    mapboxgl.accessToken = 'pk.eyJ1Ijoic2hhcnZpbGFrMTEiLCJhIjoiY2pmbzJ6ZDJoMWsxcTMzbG5ycW10enFhdCJ9.1zX-PBJXwJYiiMS63GThtg';
+    var map = new mapboxgl.Map({
+        container: 'delay-map',
+        style: 'mapbox://styles/mapbox/streets-v10',
+        center: [0.1278, 51.5074],
+        zoom: 20,
+        pitch: 100,
+        interactive: true
+    });
+
+    map.on('load', function () {
+        map.addControl(new mapboxgl.NavigationControl());
+        var layers = map.getStyle().layers;
+
+        var labelLayerId;
+        for (var i = 0; i < layers.length; i++) {
+            if (layers[i].type === 'symbol' && layers[i].layout['text-field']) {
+                labelLayerId = layers[i].id;
+                break;
+            }
+        }
+
+        map.addLayer({
+            'id': '3d-buildings',
+            'source': 'composite',
+            'source-layer': 'building',
+            'filter': ['==', 'extrude', 'true'],
+            'type': 'fill-extrusion',
+            'minzoom': 17,
+            'paint': {
+                'fill-extrusion-color': '#aaa',
+                'fill-extrusion-height': [
+                    "interpolate", ["linear"], ["zoom"],
+                    15, 0,
+                    15.05, ["get", "height"]
+                ],
+                'fill-extrusion-base': [
+                    "interpolate", ["linear"], ["zoom"],
+                    15, 0,
+                    15.05, ["get", "min_height"]
+                ],
+                'fill-extrusion-opacity': .6
+            }
+        }, labelLayerId);
+    });
+
+    var socket = io(window.socketendpoint);
+    socket.on('connect', function () {
+        socket.emit("LOCATIONREQUEST", driverId);
+    });
+
+    socket.on("LOCATIONRESPONSE", function (data) {
+        console.log(data);
+        changeLiveLocation(data);
+    });
+
+    window.onbeforeunload = function () {
+        socket.emit('close');
+    };
+
+    window.onblur = function (){
+        focus = false;
+    };
+
+    window.onfocus = function (){
+        focus = true;
+        // clear all intervals
+    };
+
+    function changeLiveLocation(location) {
+        if (marker) {
+            oldLatLng = marker._lngLat;
+            lastQueryTime[location.DriverId] = Date.now();
+            var el = document.getElementById(location.DriverId);
+            if (!el) {
+                el = document.createElement('div');
+                el.classList.add("marker");
+                el.id = location.DriverId;
+                el.location = [location.Longitude, location.Latitude];
+            }
+            else {
+                el.location = [location.Longitude, location.Latitude];
+            }
+            map.setCenter([location.Longitude, location.Latitude]).easeTo({bearing:location.Bearing, duration:200});
+            var deltaLat = (location.Latitude - oldLatLng.lat)/40;
+            var deltaLng = (location.Longitude - oldLatLng.lng)/40;
+            var i = 0;
+
+            if(focus == true){
+                setInterval(function(){
+                    i++;
+                    if(i < 40)
+                        moveMarker(deltaLat,deltaLng);
+                    else
+                        clearInterval();
+                },100)
+            }
+            else{
+                marker.setLngLat([location.Longitude, location.Latitude]);
+            }
+        }
+        else {
+            var el = document.createElement('div');
+            el.className = "marker";
+            el.id = location.DriverId;
+            marker = new mapboxgl.Marker(el).setLngLat([location.Longitude, location.Latitude]).addTo(map);
+        }
+    }
+
+    function moveMarker(lat,lng){
+        oldLatLng.lng += lng;
+        oldLatLng.lat += lat;
+        marker.setLngLat(oldLatLng);
+    }
+</script>
+</body>
+</html>

@@ -1,0 +1,37 @@
+<div class="row" class="logs-filter">
+    <div class="col-sm-4">
+        <input type="text" class="form-control date" datepicker-popup="dd/MM/yyyy" ng-model="startDate" close-text="Close" show-weeks="false" show-button-bar="false" is-open="startDatePicker.open" ng-focus="startDatePicker.open = true" placeholder="Start Date" />
+    </div>
+    <div class="col-sm-4">
+        <input type="text" class="form-control date" datepicker-popup="dd/MM/yyyy" ng-model="endDate" close-text="Close" show-weeks="false" show-button-bar="false" is-open="endDatePicker.open" ng-focus="endDatePicker.open = true" placeholder="End Date" />
+    </div>
+    <div class="col-sm-4">
+        <select ng-model="successFilter" ng-change="fetchPage(1)" class="form-control">
+            <option selected value="">All</option>
+            <option value="true">Success</option>
+            <option value="false">Failed</option>
+        </select>
+    </div>
+</div>
+<div class="mt32" ng-if="fetchingLogs">
+    <div class="t-l brand-primary">Fetching Logs...</div>
+</div>
+<table class="table mt32" ng-if="!fetchingLogs">
+    <thead>
+        <tr>
+            <th>Success</th>
+            <th>Run Time</th>
+            <th>Comments</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr ng-repeat="log in jobLogs">
+            <td>
+                <strong ng-class="(log.Success)?'green':'red'" ng-bind="(log.Success)?'Success':'Failed'"></strong>
+            </td>
+            <td>{{log.RunTime | date:'dd/MM/yyyy HH:mm:ss'}}</td>
+            <td>{{log.Comments}}</td>
+        </tr>
+    </tbody>
+</table>
+<pagination total-items="paging.totalItems" items-per-page="paging.itemsPerPage" ng-model="paging.currentPage" max-size="'5'" class="pagination-sm" boundary-links="true" ng-change="fetchPage(paging.currentPage)"></pagination>

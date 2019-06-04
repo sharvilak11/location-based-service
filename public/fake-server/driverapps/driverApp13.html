@@ -1,0 +1,88 @@
+<html>
+<head>
+    <title>Driver13</title>
+    <link href="https://stackpath.bootstrapcdn.com/bootstrap/3.3.2/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body style="padding: 16px;">
+Driver13 App is running <br><br>
+<button id="online" class="btn btn-info" onclick="driverOnline()">Online</button>
+<button id="offline" class="btn btn-danger" onclick="driverOffline()" disabled="true">Offline</button>
+<button id="start" class="btn btn-default" onclick="startTrip()" disabled="true">Start Trip</button>
+<button id="complete" class="btn btn-primary" onclick="completetrip()" disabled="true">Complete Trip</button>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/2.0.4/socket.io.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/axios/0.18.0/axios.min.js"></script>
+<script src="../config.js"></script>
+<script>
+    var driver = "driver13";
+    var tenant = "301FD400-A0FC-496F-A630-BCB6A6DD5BE7";
+    var booking;
+    var complete;
+    var online;
+    var latestLocation;
+    var socket = io(window.fakesocketendpoint,{query: {driver:driver}}); // LISTENING
+    var socket_backend = io(window.socketendpoint); // SENDING
+
+    socket.on('LOCATIONUPDATED', function(data) {
+        if(data.DriverId == driver){
+            latestLocation = data;
+            console.log(data);
+            if(booking){
+                data.BookingId = booking.BookingId;
+            }
+            if(online)
+                socket_backend.emit('DRIVERLOCATION',data);
+        }
+    });
+
+    function driverOnline(){
+        axios.post('/api/onlinedriver',latestLocation).then(function(response){
+            document.getElementById("offline").disabled = false;
+            document.getElementById("online").disabled = true;
+            document.getElementById("start").disabled = false;
+            online = true;
+        })
+    }
+
+    function startTrip(){
+        booking = {
+            BookingId: 'booking13',
+            TenantId: tenant,
+            DriverId: driver
+        }
+        axios.post('/api/starttrip',booking).then(function(response){
+            console.log(response);
+            document.getElementById("start").disabled = true;
+            document.getElementById("offline").disabled = true;
+            document.getElementById("complete").disabled = false;
+        })
+    }
+
+    function completetrip(){
+        complete = true;
+        axios.post('/api/completetrip', {bookingid: booking.BookingId}).then(function(response){
+            prompt("Polyline",response.data.Polyline);
+        })
+        document.getElementById("complete").disabled = true;
+
+        document.getElementById("offline").disabled = false;
+        booking = undefined;
+        confirm('Trip Completed');
+    }
+
+    function generatePolyline(){
+        axios.get('/api/polyline?bookingid='+ booking.BookingId).then(function(response){
+            prompt("Polyline",response.data.Polyline);
+        })
+    }
+
+    function driverOffline(){
+        axios.post('/api/offlinedriver',latestLocation).then(function(response){
+            document.getElementById("offline").disabled = true;
+            document.getElementById("online").disabled = false;
+            online = false;
+        })
+    }
+</script>
+</body>
+</html>

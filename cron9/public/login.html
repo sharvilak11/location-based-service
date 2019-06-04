@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+
+<head>
+    <title>Cron Jobs</title>
+    <meta charset="utf-8">
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="viewport" content="width=device-width; initial-scale=1.0; maximum-scale=1.0; minimum-scale=1.0; user-scalable=no; target-densityDpi=device-dpi" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black" />
+    <link href="/includes/css/style.min.css" rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+</head>
+
+<body ng-controller="LoginController" ng-app="cronjobs.login">
+    <div style="height:100%">
+        <div class="login-wrapper">
+            <div class="hero">
+                <div class="background"></div>
+                <div class="features hidden-xs hidden-sm">
+                    <div class="row">
+                        <div class="col-md-12 feature">
+                            <i class="icon-users2"></i>
+                            <div class="desc">
+                                <span class="tag-line">CRON9</span>Automated job scheduling is now easier and more efficient than ever before. CRON9 helps you schedule and monitor complex batch processes from one streamlined, intuitive interface. It enables to get more done in less time and minimize risk by running jobs more reliably.
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="login-container">
+                <form class="login-box" id="login-box">
+                    <div class="logo">
+                        <div class="brand-logo"><i class="ti-rocket"></i>Cron9</div>
+                    </div>
+                    <p class="pt35 hidden-xs">Sign into your <strong class="blue">CRON9</strong> Account.</p>
+                    <div class="form-group">
+                        <label>Login</label>
+                        <div class="controls">
+                            <input type="text" name="username" placeholder="Username" ng-model="credentials.username" class="form-control" required />
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label>Password</label>
+                        <div class="controls">
+                            <input type="password" class="form-control" name="password" ng-model="credentials.password" placeholder="Password" required />
+                        </div>
+                    </div>
+                    <small ng-show="invalid" style="color:red">Invalid details. Please try again.</small>
+                    <button type="submit" id="login-button" class="btn pull-right" ng-click="login()">
+                        <i class="material-icons">lock</i> Log in to Your Account
+                    </button>
+                </form>
+                <div class="cims-info">
+                    <div class="row">
+                        <div class="col-md-2 col-sm-3 no-padding">
+                            <img src="/includes/images/e9ine-circle.png" />
+                        </div>
+                        <div class="col-md-10 col-sm-9 info">
+                            <strong class="brand-primary">e9ine</strong>.
+                            <br /> Contact e9ine for account details.
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <script src="bower_components/angular/angular.min.js"></script>
+    <script src="bower_components/jquery/dist/jquery.min.js"></script>
+    <script src="webapp/config.js"></script>
+    <script src="webapp/login.js"></script>
+</body>
+
+</html>

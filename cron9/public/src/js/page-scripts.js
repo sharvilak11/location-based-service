@@ -1,0 +1,16 @@
+// @codekit-prepend "../../bower_components/jquery/dist/jquery.min.js";
+// @codekit-prepend "../../bower_components/bootstrap/dist/js/bootstrap.min.js";
+// @codekit-prepend "../../bower_components/angular/angular.min.js";
+// @codekit-prepend "../../bower_components/angular-sanitize/angular-sanitize.min.js";
+// @codekit-prepend "../../bower_components/modernizr/modernizr.js";
+// @codekit-prepend "../../bower_components/masonry/dist/masonry.pkgd.min.js";
+// @codekit-prepend "../../bower_components/fastclick/lib/fastclick.js";
+// @codekit-prepend "../../bower_components/lightbox2/dist/js/lightbox.min.js";
+// @codekit-prepend "../../bower_components/jquery-smooth-scroll/jquery.smooth-scroll.min.js";
+// @codekit-prepend "../../bower_components/angular-ui-router/release/angular-ui-router.js";
+// @codekit-prepend "../../bower_components/angular-ui-router-tabs/src/ui-router-tabs.js";
+// @codekit-prepend "../../bower_components/angular-ui-bootstrap-bower/ui-bootstrap-tpls.js";
+// @codekit-prepend "../../bower_components/sweetalert/lib/sweet-alert.min.js";
+// @codekit-prepend "../../bower_components/flexslider/jquery.flexslider.js";
+// @codekit-prepend "parallax.min.js";
+// @codekit-prepend "module.js";

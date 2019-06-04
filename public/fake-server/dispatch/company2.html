@@ -1,0 +1,251 @@
+<html>
+<head>
+    <title>Company2 Dispatch</title>
+    <link href="https://stackpath.bootstrapcdn.com/bootstrap/3.3.2/css/bootstrap.min.css" rel="stylesheet">
+    <script src='https://api.tiles.mapbox.com/mapbox-gl-js/v0.44.2/mapbox-gl.js'></script>
+    <link href='https://api.tiles.mapbox.com/mapbox-gl-js/v0.44.2/mapbox-gl.css' rel='stylesheet'/>
+</head>
+<body>
+<style>
+    #delay-map {
+        height: 600px;
+        text-align: center;
+    }
+
+    .marker {
+        /*background-image: url('../includes/images/pickup_dropoff.png');*/
+        /*width: 25px;*/
+        /*height: 25px;*/
+        /*background-size: cover;*/
+        /*cursor: pointer;*/
+        z-index: 99;
+        width: 25px;
+        height: 25px;
+        border-radius: 50%;
+        background: #3887be;
+        rotation: 180deg !important;
+        color: white;
+        text-align: center;
+        font-size: 1.4em;
+        line-height: 1.2em;
+        border: 2px solid white;
+        box-shadow: 0px 10px 25px #666;
+        cursor: pointer;
+    }
+
+    .mapboxgl-canvas {
+        position: relative !important;
+    }
+</style>
+<div style="float: left;width: 100%;">
+    <div style="margin-top: 8px;margin-left: 8px;">
+        <h3>Track 9 Demo</h3>
+        <button class="btn btn-primary" onclick="liveRequest()">Live</button>
+        <button class="btn btn-warning" onclick="normalRequest()">20s</button>
+    </div>
+    <div style="width: 100%;float:left;margin-top: 20px;">
+        <div id="delay-map"></div>
+    </div>
+    <br><br>
+    <ul>
+        <li>Open console to view sockets' data</li>
+        <li>Make sure to fire command <b>'flushall'</b> in Redis to delete the old locations (Complete Trip does that automatically once data is saved in mongodb)</li>
+        <li>Make sure to delete locations from track9DB before starting the demo</li>
+    </ul>
+</div>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/2.0.4/socket.io.js"></script>
+<script src="https://unpkg.com/cheap-ruler@2.5.1/cheap-ruler.js"></script>
+<script src="../config.js"></script>
+<script>
+    var markers = {};
+    var oldLatLng = {};
+    var lastQueryTime = {};
+    var individualMarker = undefined;
+    var ruler = cheapRuler(41.8949, 'meters')
+    var state = {
+        loaded: {},
+        speedFactor: 50,
+        pause: true,
+        lastQueryTime: 0,
+        truckLocation: [-87.64439, 41.89],
+        lastAtRestaurant: {
+            taco: 0,
+            pizza: 0,
+            noodles: 0
+        },
+        keepTrack: [],
+        currentSchedule: [],
+        currentRoute: null,
+        pointHopper: {},
+        dragLine: [],
+        ruler: cheapRuler(41.8949, 'meters'),
+    }
+    mapboxgl.accessToken = 'pk.eyJ1Ijoic2hhcnZpbGFrMTEiLCJhIjoiY2pmbzJ6ZDJoMWsxcTMzbG5ycW10enFhdCJ9.1zX-PBJXwJYiiMS63GThtg';
+    var map = new mapboxgl.Map({
+        container: 'delay-map',
+        style: 'mapbox://styles/mapbox/streets-v10',
+        center: [0.1278, 51.5074],
+        zoom: 10,
+        pitch: 45,
+        bearing: -17.6,
+        hash: true
+    });
+
+    map.on('load', function () {
+        map.addControl(new mapboxgl.NavigationControl());
+        var layers = map.getStyle().layers;
+
+        var labelLayerId;
+        for (var i = 0; i < layers.length; i++) {
+            if (layers[i].type === 'symbol' && layers[i].layout['text-field']) {
+                labelLayerId = layers[i].id;
+                break;
+            }
+        }
+
+        map.addLayer({
+            'id': '3d-buildings',
+            'source': 'composite',
+            'source-layer': 'building',
+            'filter': ['==', 'extrude', 'true'],
+            'type': 'fill-extrusion',
+            'minzoom': 15,
+            'paint': {
+                'fill-extrusion-color': '#aaa',
+                'fill-extrusion-height': [
+                    "interpolate", ["linear"], ["zoom"],
+                    15, 0,
+                    15.05, ["get", "height"]
+                ],
+                'fill-extrusion-base': [
+                    "interpolate", ["linear"], ["zoom"],
+                    15, 0,
+                    15.05, ["get", "min_height"]
+                ],
+                'fill-extrusion-opacity': .6
+            }
+        }, labelLayerId);
+    });
+
+    var socket = io(window.socketendpoint);
+    socket.on('connect', function () {
+
+    });
+
+    var mode = 'NORMAL';
+    var tenant = '301FD400-A0FC-496F-A630-BCB6A6DD5BE7';
+
+    normalRequest();
+
+    function liveRequest() {
+        mode = 'LIVE';
+        socket.emit('DISPATCHREQUEST',{key: mode,tenant: tenant});
+    }
+
+    function normalRequest() {
+        mode = 'NORMAL';
+        socket.emit('DISPATCHREQUEST',{key: mode,tenant: tenant});
+        setInterval(function () {
+            if (mode === 'NORMAL') {
+                socket.emit('DISPATCHREQUEST',{key: mode,tenant: tenant});
+            }
+        }, 20000);
+    }
+
+    socket.on("DISPATCHRESPONSE", function (data) {
+        console.log(mode +" Tracking");
+        console.log(data);
+        if(mode == 'LIVE')
+            changeLiveLocation(data);
+        else
+            changeNormalLocation(data);
+    });
+
+    socket.on("REMOVEDRIVER", function (driver) {
+        removeMarker(driver);
+        alert(driver + " went offline");
+    });
+
+    socket.on("ADDDRIVER", function (location){
+        addMarker(location);
+        alert(location.DriverId + " is online");
+    })
+
+    window.onbeforeunload = function () {
+        socket.emit('close');
+    };
+
+    function changeNormalLocation(locations) {
+        for (var i = 0; i < locations.length; i++) {
+            var lat = locations[i].Latitude;
+            var lng = locations[i].Longitude;
+            if (markers[locations[i].DriverId]) {
+                markers[locations[i].DriverId]
+                    .setLngLat([lng, lat]);
+            }
+            else {
+                var el = document.createElement('div');
+                el.classList.add("marker");
+                el.id = locations[i].DriverId;
+                el.innerHTML = "&#x25b2";
+                el.id = locations[i].DriverId;
+                markers[locations[i].DriverId] = new mapboxgl.Marker(el).setLngLat([lng, lat]).addTo(map);
+            }
+        }
+    }
+
+    function changeLiveLocation(location) {
+        if (markers[location.DriverId]) {
+            oldLatLng[location.DriverId] = markers[location.DriverId]._lngLat;
+            // lastQueryTime[location.DriverId] = Date.now();
+            // markers[location.DriverId].setLngLat([location.Longitude, location.Latitude]);
+            var el = document.getElementById(location.DriverId);
+            if(!el){
+                el = document.createElement('div');
+                el.classList.add("marker");
+                el.innerHTML = "&#x25b2";
+                el.id = location.DriverId;
+                el.location = [location.Longitude, location.Latitude];
+            }
+            else{
+                el.location = [location.Longitude, location.Latitude];
+            }
+            var deltaLat = (location.Latitude - oldLatLng[location.DriverId].lat)/20;
+            var deltaLng = (location.Longitude - oldLatLng[location.DriverId].lng)/20;
+            var i = 0;
+            setInterval(function(){
+                i++;
+                if(i < 20)
+                    moveMarker(location.DriverId,deltaLat,deltaLng);
+                else{
+                    clearInterval();
+                }
+            },200)
+        }
+        else {
+            var el = document.createElement('div');
+            el.classList.add("marker");
+            el.innerHTML = "&#x25b2";
+            el.id = location.DriverId;
+            markers[location.DriverId] = new mapboxgl.Marker(el).setLngLat([location.Longitude, location.Latitude]).addTo(map);
+        }
+
+    }
+
+    function removeMarker(driver) {
+        markers[driver].remove();
+    }
+
+    function easing(t) {
+        return t * (2 - t);
+    }
+
+    function moveMarker(driverId,lat,lng){
+        oldLatLng[driverId].lng += lng;
+        oldLatLng[driverId].lat += lat;
+        markers[driverId].setLngLat(oldLatLng[driverId]);
+    }
+
+</script>
+</body>
+</html>

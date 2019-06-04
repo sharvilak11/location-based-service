@@ -1,0 +1,177 @@
+/* Panels
+------------------------------------
+*/
+
+.panel {
+    .border-radius(2px);
+    -webkit-transition: all 0.2s ease;
+    .transition(all 0.2s ease);
+    overflow: hidden !important;
+    // min-height: 200px;
+    .shadow {
+        display: none;
+        position: absolute;
+        left: 1px;
+        right: 1px;
+        top: 48px;
+        bottom: 1px;
+        background: rgba(255, 255, 255, 0.7);
+        text-align: center;
+        padding-top: 30px;
+        img {
+            width: 64px;
+        }
+        .shadow-text {
+            margin-top: 10px;
+            color: @brand-primary;
+            font-size: 11px;
+            text-transform: uppercase;
+            font-weight: 800;
+            text-align: center;
+        }
+    }
+    .panel-heading {
+        background: transparent;
+        .border-radius(2px);
+        border-bottom: 0px;
+        padding: 15px 15px 7px 15px;
+        min-height: 48px;
+        .panel-title {
+            text-transform: uppercase;
+            color: mix(@brand-primary, #bbb, 30%) !important;
+            display: inline-block;
+            letter-spacing: 0.02em;
+            font-size: 14px;
+            font-weight: 600;
+            margin: 0;
+            padding: 0;
+            line-height: normal;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            -webkit-text-stroke: 0px;
+        }
+        .panel-options {
+            float: right;
+            i {
+                color: @light-grey;
+                margin-left: 5px;
+                font-size: 16px;
+                cursor: pointer;
+                &:hover {
+                    color: @brand-secondary;
+                }
+            }
+        }
+    }
+    .panel-body {
+        padding: 20px;
+        padding-top: 5px;
+        height: 100%;
+        width: 100%;
+        color: @brand-grey;
+        .title {
+            margin-top: 0px;
+        }
+        &.no-padding {
+            .row {
+                margin-left: 0;
+                margin-right: 0;
+            }
+        }
+    }
+    &.panel-default {
+        border: 1px solid rgba(0, 0, 0, 0.07);
+    }
+    &.panel-bordered {
+        border: 1px solid rgba(230, 230, 230, 0.7);
+    }
+    &.full-height {
+        height: calc(100%);
+        .panel-body {
+            height: auto;
+            width: 100%;
+            height: 100%;
+        }
+    }
+    &.panel-alert {
+        .brand-gradient();
+        background-repeat: no-repeat;
+        border: 0;
+        .border-radius(2px);
+        .panel-heading {
+        	.border-radius(2px);
+            .panel-title {
+                color: #fff !important;
+            }
+            .panel-options {
+                float: right;
+                i {
+                    color: #fff;
+                    &:hover {
+                        color: @brand-secondary;
+                    }
+                }
+            }
+        }
+        .panel-body {
+            color: #fff !important;
+            h3.section-title {
+                color: #fff;
+            }
+            pre {
+                color: #fff;
+            }
+        }
+        &.red {
+            background-color: @red !important;
+        }
+        .shadow {
+            background: rgba(255, 255, 255, 1.0);
+        }
+    }
+    &.panel-dark {
+        border: 0;
+        .border-radius(2px);
+        .panel-heading {
+        	.border-radius(2px 2px 0 0);
+            background-color: @darker-grey;
+            .panel-title {
+                color: #fff !important;
+            }
+            .panel-options {
+                float: right;
+                i {
+                    color: #fff;
+                    &:hover {
+                        color: @brand-secondary;
+                    }
+                }
+            }
+        }
+        .panel-body {
+        	background-color: @dark-grey;
+            color: #fff !important;
+            padding:20px 5px !important;
+            h3.section-title {
+                color: #fff;
+            }
+            pre {
+            	color: #fff;
+            }
+        }
+        &.red {
+            background-color: @red !important;
+        }
+        .shadow {
+            background: rgba(255, 255, 255, 1.0);
+        }
+    }
+    @media only screen and (max-width: 767px) {
+        margin-left: -15px;
+        margin-right: -15px;
+        .modal & {
+            margin-left: 0 !important;
+            margin-right: 0 !important;
+        }
+    }
+}
