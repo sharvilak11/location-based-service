@@ -15,7 +15,7 @@ module.exports = function (client) {
             }
             else {
                 var options = {
-                    uri: config.cab9.api + 'api/track9/token',
+                    uri: config.api + 'api/token',
                     json: true,
                     method: 'POST',
                     body: {
