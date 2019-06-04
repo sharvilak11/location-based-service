@@ -1,5 +1,5 @@
 {
-  "name": "track9",
+  "name": "location-based-services",
   "version": "1.0.0",
   "description": "Location-based services",
   "main": "server.js",
@@ -7,11 +7,7 @@
     "test": "echo \"Error: no test specified\" && exit 1",
     "start": "node server.js"
   },
-  "repository": {
-    "type": "git",
-    "url": "git@git.e9ine.com:sharvilak/track9.git"
-  },
-  "author": "sharvilak@e9ine.com",
+  "author": "sharvilakt@gmail.com",
   "license": "ISC",
   "dependencies": {
     "@mapbox/polyline": "^1.0.0",
